@@ -21,12 +21,12 @@ with st.sidebar:
     # Refactored from https://github.com/a16z-infra/llama2-chatbot
     st.subheader('Models and parameters')
     selected_model = st.sidebar.selectbox('Choose a Llama2 model', ['Llama2-7B', 'Llama2-13B', 'Llama2-70B'], key='selected_model')
-    llm_models = {
-        'Llama2-7B': 'a16z-infra/llama7b-v2-chat:4f0a4744c7295c024a1de15e1a63c880d3da035fa1f49bfd344fe076074c8eea',
-        'Llama2-13B': 'a16z-infra/llama13b-v2-chat:df7690f1994d94e96ad9d568eac121aecf50684a0b0963b25a41cc40061269e5',
-        'Llama2-70B': 'replicate/llama70b-v2-chat:e951f18578850b652510200860fc4ea62b3b16fac280f83ff32282f87bbd2e48'
-    }
-    llm = llm_models[selected_model]
+    if selected_model == 'Llama2-7B':
+        llm = 'a16z-infra/llama7b-v2-chat:4f0a4744c7295c024a1de15e1a63c880d3da035fa1f49bfd344fe076074c8eea'
+    elif selected_model == 'Llama2-13B':
+        llm = 'a16z-infra/llama13b-v2-chat:df7690f1994d94e96ad9d568eac121aecf50684a0b0963b25a41cc40061269e5'
+    else:
+        llm = 'replicate/llama70b-v2-chat:e951f18578850b652510200860fc4ea62b3b16fac280f83ff32282f87bbd2e48'
     
     temperature = st.sidebar.slider('temperature', min_value=0.01, max_value=5.0, value=0.1, step=0.01)
     top_p = st.sidebar.slider('top_p', min_value=0.01, max_value=1.0, value=0.9, step=0.01)
@@ -80,3 +80,35 @@ if st.session_state.messages[-1]["role"] != "assistant":
             placeholder.markdown(full_response)
     message = {"role": "assistant", "content": full_response}
     st.session_state.messages.append(message)
+and llama2-local.py from llama_cpp import Llama 
+import timeit
+
+# Load Llama 2 model
+llm = Llama(model_path="llama-2-7b-chat.ggmlv3.q2_K.bin",
+            n_ctx=512,
+            n_batch=128)
+
+# Start timer
+start = timeit.default_timer()
+
+# Generate LLM response
+prompt = "What is Python?"
+
+output = llm(prompt,
+             max_tokens=-1,
+             echo=False,
+             temperature=0.1,
+             top_p=0.9)
+
+# Stop timer
+stop = timeit.default_timer()
+duration = stop - start
+print("Time: ", duration, '\n\n')
+
+# Display generated text
+print(output['choices'][0]['text'])
+
+# Write to file
+with open("response.txt", "a") as f:
+  f.write(f"Time: {duration}")
+  f.write(output['choices'][0]['text']) 
